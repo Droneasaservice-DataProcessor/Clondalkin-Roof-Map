@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Former Ibis Hotel, Clondalkin – Roof Inspection Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:"Segoe UI",Arial,sans-serif;color:#1d1d1b}
+header{height:56px;display:flex;align-items:center;gap:14px;padding:0 14px;background:#1F3864;color:#fff}
+header h1{font-size:15px;margin:0;font-weight:600}
+header .sub{font-size:12px;opacity:.85}
+.modes{margin-left:auto;display:flex;gap:6px}
+.modes button{border:1px solid #fff;background:transparent;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.modes button.on{background:#fff;color:#1F3864;font-weight:600}
+#side{position:absolute;top:56px;bottom:0;left:0;width:360px;background:#fafaf8;border-right:1px solid #ddd;overflow-y:auto;z-index:800}
+#map{position:absolute;top:56px;bottom:0;left:360px;right:0;background:#fff}
+#side h2{font-size:14px;margin:14px 16px 6px;color:#1F3864}
+#side .intro{font-size:12px;color:#555;margin:0 16px 10px;line-height:1.45}
+.item{display:flex;gap:10px;padding:10px 16px;border-top:1px solid #eee;cursor:pointer;align-items:flex-start}
+.item:hover{background:#eef2f8}
+.num{flex:0 0 26px;height:26px;border-radius:50%;background:#c00000;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.num.off{background:#8c8c8c}
+.item b{font-size:13px;display:block}
+.item span{font-size:12px;color:#555}
+.status{display:inline-block;margin-top:4px;font-size:11px;padding:1px 7px;border-radius:10px;border:1px solid}
+.s-ok{color:#0f6e56;border-color:#0f6e56;background:#e1f5ee}.s-warn{color:#854f0b;border-color:#ba7517;background:#faeeda}
+.s-bad{color:#a32d2d;border-color:#a32d2d;background:#fcebeb}.s-na{color:#5f5e5a;border-color:#888780;background:#f1efe8}
+#detail{display:none;padding:12px 16px 24px}
+#detail .back{font-size:13px;color:#1F3864;cursor:pointer;margin-bottom:8px;display:inline-block}
+#detail h3{margin:4px 0 2px;font-size:16px;color:#1F3864}
+#detail .loc{font-size:12px;color:#666;margin-bottom:8px}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.pics figure{margin:0}
+.pics img{width:100%;border-radius:4px;cursor:zoom-in;display:block}
+.pics figcaption{font-size:11px;color:#666;margin-top:2px}
+.pics .wide{grid-column:1/3}
+#detail ul{padding-left:18px;margin:6px 0;font-size:13px;line-height:1.45}
+#detail .mean{font-size:13px;line-height:1.45;background:#eef2f8;border-left:3px solid #1F3864;padding:8px 10px;margin-top:8px}
+#swipe{position:absolute;top:0;bottom:0;width:4px;background:#fff;box-shadow:0 0 4px rgba(0,0,0,.6);z-index:650;cursor:ew-resize;display:none}
+#swipe span{position:absolute;top:50%;left:-14px;width:32px;height:32px;margin-top:-16px;border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:14px;color:#1F3864;user-select:none}
+.panel{position:absolute;z-index:700;background:rgba(255,255,255,.95);border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.25);font-size:12px;padding:9px 11px}
+#legend{left:12px;bottom:14px;width:240px}
+#legend .bar{height:11px;border-radius:3px;background:linear-gradient(to right,#000004,#420a68,#932667,#dd513a,#fca50a,#fcffa4);margin:5px 0 2px}
+#legend .ends{display:flex;justify-content:space-between}
+#legend .info{margin-top:5px;color:#555}
+#legend .more{color:#1F3864;cursor:pointer;text-decoration:underline}
+#about{display:none;margin-top:6px;line-height:1.4;color:#333}
+#north{right:12px;top:12px;text-align:center;font-weight:700;color:#1F3864;padding:6px 9px;line-height:1.1}
+#scale{right:12px;bottom:14px;padding:6px 10px}
+#scale .sb{height:6px;border:2px solid #1d1d1b;border-top:none;margin-top:3px}
+.tag{background:#fff;border:2px solid #c00000;color:#c00000;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;font-size:12px}
+.leaflet-tooltip.lbl{background:transparent;border:none;box-shadow:none;padding:0}
+.leaflet-tooltip.lbl:before{display:none}
+.tp{font-size:13px;line-height:1.4}.tp b{font-size:16px}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;flex-direction:column;cursor:zoom-out}
+#lightbox img{max-width:92vw;max-height:84vh;border-radius:4px}
+#lightbox div{color:#fff;font-size:13px;margin-top:8px}
+@media (max-width:760px){
+ header{height:auto;flex-wrap:wrap;padding:8px}header .sub{display:none}
+ #side{top:auto;bottom:0;width:100%;height:42%;border-right:none;border-top:1px solid #ddd}
+ #map{left:0;top:84px;bottom:42%}
+ #legend{width:200px}#scale{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Former Ibis Hotel, Clondalkin – Roof Inspection</h1><div class="sub">Drone survey 29 October 2026 · DroneAsAService</div></div>
+  <div class="modes"><button data-m="rgb">Visual</button><button data-m="thermal">Thermal</button><button data-m="swipe" class="on">Swipe</button></div>
+</header>
+<aside id="side">
+  <div id="list">
+    <h2>Findings</h2>
+    <p class="intro">Select a finding to see its photos and what it means. Red numbers are marked on the map; grey numbers relate to the eaves or elevations at several locations.</p>
+    <div id="items"></div>
+  </div>
+  <div id="detail"></div>
+</aside>
+<div id="map">
+  <div id="swipe"><span>&#8596;</span></div>
+  <div id="legend" class="panel"><b>Surface temperature</b><div class="bar"></div><div class="ends"><span>5 °C cold</span><span>25 °C warm</span></div>
+    <div class="info">Click the roof to read the temperature. <span class="more" id="moreBtn">About the readings</span></div>
+    <div id="about">Apparent surface temperatures at emissivity 0.95, captured around midday. Suitable for tiles, membrane and concrete; not reliable on metal or glass (flashings, fans, rooflights). Accuracy approx. ±2 °C, so best used to compare nearby spots. Sun-facing slopes read warmer because of the sun, not defects. White areas: no thermal coverage.</div></div>
+  <div id="north" class="panel">N<br>&#8593;</div>
+  <div id="scale" class="panel"><span id="sl">5 m</span><div class="sb" id="sbar"></div></div>
+</div>
+<div id="lightbox"><img alt=""><div></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="temps.js"></script>
+<script>
+var W=6117,H=4832,PX=0.0165;
+var ST={ok:['s-ok','Repair evidence seen'],warn:['s-warn','Repair seen – check'],bad:['s-bad','No repair evidence seen'],na:['s-na','Not verified'],info:['s-na','Condition item']};
+var T='Thermal',V='Visual';
+var FIND=[
+ {n:1,t:'Valley gutters (central crossing)',s:'Relined south-east valley; disturbed tiles at its top',st:'warn',xy:[3750,2670],
+  imgs:[['f1_t0052.jpg',T+' – south-east valley'],['f1_v0052.jpg',V+' – south-east valley'],['f1_t0136b.jpg',T+' – central crossing'],['f1_v0136b.jpg',V+' – central crossing']],
+  b:['The south-east valley has a bright, clean lining – consistent with recent repair. The material cannot be confirmed from above.','Tiles at the upper end of this valley form a stepped pattern with visible gaps; small dark marks show on the thermal image at the same spot.','The other valleys appear continuous, with no cold spread either side.'],
+  m:'Recent work to at least one valley is visible. The gaps at its top could let wind-driven rain in and should be checked close up. Daytime thermal cannot confirm the linings beneath the tiles are watertight.'},
+ {n:2,t:'Flashings and roof junctions',s:'Flashings in place; vegetation at pitched-to-flat corner',st:'info',xy:[3960,1716],
+  imgs:[['f2_v0048.jpg',V+' – pitched-to-flat junction'],['f2_v0006.jpg',V+' – north projection']],
+  b:['The metal apron flashing where the pitched roofs meet the flat roof appears in place and continuous.','Moss and vegetation are growing in the internal corner of this junction.','Laps and dressings could not be inspected in detail from the air.'],
+  m:'No obvious flashing failure seen from above. The vegetation holds water and should be removed and the junction checked close up.'},
+ {n:3,t:'Ridges, hips and verges',s:'Heavy lichen and moss; eroded hip bedding',st:'info',xy:null,loc:'Hip ends around the building',
+  imgs:[['f3_d0003.jpg',V+' – hip end'],['f6_d0010.jpg',V+' – hip end']],
+  b:['Heavy lichen and moss on ridge and hip tiles, especially at hip ends and on the shaded side.','At one hip end the mortar bedding is eroded and open (see Finding 6 photo).','No displaced ridge, hip or verge tiles were seen.'],
+  m:'Eroded bedding lets water in under the hip tiles and allows them to loosen. Lichen and moss hold moisture and speed up wear.'},
+ {n:4,t:'General tile condition',s:'Moss on shaded slopes; patches of replaced tiles',st:'ok',xy:[3015,2985],
+  imgs:[['f4_t0136a.jpg',T+' – west wing slope'],['f4_v0136a.jpg',V+' – west wing slope'],['f4_v0092.jpg',V+' – replaced tiles near the fans (top right)','wide']],
+  b:['Moss cushions along the tile courses read as small cold spots on thermal, because the moss holds moisture.','Small patches of darker, cleaner tiles on several slopes are consistent with individual tile replacement.','No clearly slipped, cracked or missing tiles apart from Finding 1.'],
+  m:'Some tile replacement appears to have been carried out. Moss should be removed, as it lifts tile edges and blocks gutters.'},
+ {n:5,t:'Fascias and soffits',s:'Flaking paint, bare and decayed timber',st:'bad',xy:null,loc:'Eaves on the elevations photographed',
+  imgs:[['f5_d0023.jpg',V+' – fascia beside a downpipe','wide'],['f5_d0022.jpg',V+' – fascia and soffit','wide']],
+  b:['Widespread flaking paint with bare timber exposed.','A section of fascia beside a downpipe appears decayed or missing; open joints between boards.','Dark staining and possible mould on the soffits.'],
+  m:'No visible evidence of the reported timber repairs and redecoration on the elevations photographed. The vendor should confirm where the work was done.'},
+ {n:6,t:'Gutters and downpipes',s:'Split corner joint, grass in gutter, staining',st:'info',xy:null,loc:'Eaves on the elevations photographed',
+  imgs:[['f3_d0020.jpg',V+' – gutter corner and hip end'],['f6_ph7.jpg',V+' – gutter and downpipe outlet']],
+  b:['A split at a gutter corner joint.','Grass growing in a gutter; moss shedding from the tiles into the gutters.','Dark streaks at a gutter joint and around a downpipe outlet suggest overflow or a leaking joint.'],
+  m:'Blocked or leaking gutters spill water onto the fascias and walls, consistent with the timber decay at Finding 5.'},
+ {n:7,t:'Flat roof (GRP overlay)',s:'Ponding on new membrane, confirmed by thermal',st:'warn',xy:[4350,1986],
+  imgs:[['f7_t0164.jpg',T+' – flat roof'],['f7_v0164.jpg',V+' – flat roof'],['f7_t0118.jpg',T+' – flat roof, north section'],['f7_v0118.jpg',V+' – flat roof']],
+  b:['The light-grey membrane is consistent with the new GRP overlay and mostly reads warm (dry).','A line of cold patches near the upstand matches rust-brown stains – standing water (ponding).','An older, darker membrane at the north end carries moss; unclear whether it was included in the overlay.','A loose cable lies across the membrane.'],
+  m:'Water is not draining fully from parts of the new membrane. The extent of the overlay works should be confirmed with the vendor.'},
+ {n:8,t:'Penetrations, vents and lightning protection',s:'Staining and cold zone around extract fans',st:'info',xy:[3285,2835],
+  imgs:[['f8_t0049.jpg',T+' – extract fan units'],['f8_v0049.jpg',V+' – extract fan units']],
+  b:['Heavy dark staining around the fan bases; a matching cold zone on thermal (damp, condensate or partly shade).','Tile vents appear in place; lightning protection tape appears continuous where visible.'],
+  m:'The staining suggests long-term water or condensate run-off. The fan flashings should be checked close up.'},
+ {n:9,t:'Stair-core windows (overview)',s:'Not identified in the survey imagery',st:'na',xy:null,loc:'Not located',
+  imgs:[['f9_v0309.jpg',V+' – arched gable window, courtyard elevation','wide']],
+  b:['The boarded/membrane-covered stair-core windows described in the brief could not be identified.','The arched gable window pictured appears glazed, with a pole or bar across it.'],
+  m:'Not verified. The client should confirm the location of these windows for a follow-up visit.'},
+ {n:'i',t:'Incidental: render cracking',s:'Outside roof scope – for information',st:'info',xy:null,loc:'Building corner below the eaves',
+  imgs:[['inc_d0016.jpg',V+' – render below the eaves','wide']],
+  b:['Stepped and horizontal cracks with dark staining in the render at a building corner.'],
+  m:'Outside the roof scope of this survey and not assessed.'}
+];
+var map=L.map('map',{crs:L.CRS.Simple,minZoom:-4,maxZoom:2,zoomSnap:0.25,attributionControl:false,zoomControl:true});
+var bounds=[[0,0],[H,W]];
+map.createPane('thermalPane');map.getPane('thermalPane').style.zIndex=410;
+L.imageOverlay('rgb.jpg',bounds).addTo(map);
+L.imageOverlay('thermal.jpg',bounds,{pane:'thermalPane'}).addTo(map);
+map.fitBounds(bounds);map.setMaxBounds([[-H*0.3,-W*0.3],[H*1.3,W*1.3]]);
+function ll(x,y){return[H-y,x];}
+var markers={};
+FIND.forEach(function(f){if(!f.xy)return;
+  var m=L.circleMarker(ll(f.xy[0],f.xy[1]),{radius:9,color:'#c00000',weight:3,fillColor:'#fff',fillOpacity:.3}).addTo(map)
+   .bindTooltip('<span class="tag">Finding '+f.n+'</span>',{permanent:true,direction:'top',offset:[0,-8],className:'lbl',opacity:1});
+  m.on('click',function(e){L.DomEvent.stopPropagation(e);show(f.n);});markers[f.n]=m;});
+var items=document.getElementById('items');
+FIND.forEach(function(f){var d=document.createElement('div');d.className='item';
+  d.innerHTML='<div class="num'+(f.xy?'':' off')+'">'+f.n+'</div><div><b>'+f.t+'</b><span>'+f.s+'</span><br><span class="status '+ST[f.st][0]+'">'+ST[f.st][1]+'</span></div>';
+  d.onclick=function(){show(f.n);};items.appendChild(d);});
+function show(n){var f=FIND.filter(function(x){return x.n==n})[0],el=document.getElementById('detail');
+  var pics=f.imgs.map(function(i){return '<figure class="'+(i[2]||'')+'"><img src="img/'+i[0]+'" alt="'+i[1]+'" data-cap="'+i[1]+'"><figcaption>'+i[1]+'</figcaption></figure>'}).join('');
+  el.innerHTML='<span class="back">&larr; All findings</span><h3>'+(f.n==='i'?'':'Finding '+f.n+' – ')+f.t+'</h3>'
+   +'<div class="loc">'+(f.xy?'Marked on the map':'Location: '+f.loc+' (not marked on the map)')+' · <span class="status '+ST[f.st][0]+'">'+ST[f.st][1]+'</span></div>'
+   +'<div class="pics">'+pics+'</div><ul>'+f.b.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><div class="mean"><b>What this means:</b> '+f.m+'</div>';
+  document.getElementById('list').style.display='none';el.style.display='block';document.getElementById('side').scrollTop=0;
+  el.querySelector('.back').onclick=function(){el.style.display='none';document.getElementById('list').style.display='block';};
+  el.querySelectorAll('img').forEach(function(im){im.onclick=function(){openLB(im.src,im.dataset.cap)}});
+  if(f.xy)map.flyTo(ll(f.xy[0],f.xy[1]),0,{duration:.6});}
+var lb=document.getElementById('lightbox');
+function openLB(src,cap){lb.querySelector('img').src=src;lb.querySelector('div').textContent=cap;lb.style.display='flex';}
+lb.onclick=function(){lb.style.display='none'};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')lb.style.display='none'});
+document.getElementById('moreBtn').onclick=function(){var a=document.getElementById('about');a.style.display=a.style.display==='block'?'none':'block';};
+var bin=atob(TEMPS.data),TT=new Uint16Array(bin.length/2);
+for(var i=0;i<TT.length;i++)TT[i]=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);
+function tempAt(x,y){var c=Math.floor(x/TEMPS.k),r=Math.floor(y/TEMPS.k);
+  if(c<0||r<0||c>=TEMPS.w||r>=TEMPS.h)return null;var v=TT[r*TEMPS.w+c];return v?v/100-50:null;}
+var prev=null;
+map.on('click',function(e){var t=tempAt(e.latlng.lng,H-e.latlng.lat),txt;
+  if(t===null)txt='No thermal data at this spot';
+  else{txt='<b>'+t.toFixed(1)+' °C</b>';if(prev!==null){var d=t-prev;txt+='<br>'+(d>=0?'+':'')+d.toFixed(1)+' °C vs previous point';}prev=t;}
+  L.popup().setLatLng(e.latlng).setContent('<div class="tp">'+txt+'</div>').openOn(map);});
+function scale(){var mpp=PX/Math.pow(2,map.getZoom()),opts=[1,2,5,10,20,50],best=1;
+  opts.forEach(function(o){if(o/mpp<=140)best=o});document.getElementById('sl').textContent=best+' m';
+  document.getElementById('sbar').style.width=Math.round(best/mpp)+'px';}
+map.on('zoomend',scale);scale();
+var mode='swipe',ratio=0.5,sw=document.getElementById('swipe');
+function clip(){var pane=map.getPane('thermalPane');
+  if(mode!=='swipe'){pane.style.clip='';sw.style.display='none';return;}
+  var size=map.getSize(),nw=map.containerPointToLayerPoint([0,0]),se=map.containerPointToLayerPoint(size),cx=nw.x+(se.x-nw.x)*ratio;
+  pane.style.clip='rect('+nw.y+'px,'+se.x+'px,'+se.y+'px,'+cx+'px)';sw.style.display='block';sw.style.left=(size.x*ratio-2)+'px';}
+function setMode(m){mode=m;document.querySelectorAll('.modes button').forEach(function(b){b.classList.toggle('on',b.dataset.m===m)});
+  map.getPane('thermalPane').style.display=(m==='rgb')?'none':'';clip();}
+document.querySelectorAll('.modes button').forEach(function(b){b.onclick=function(){setMode(b.dataset.m)}});
+map.on('move zoom resize',clip);
+var drag=false;
+function mv(ev){if(!drag)return;var p=ev.touches?ev.touches[0]:ev,rc=map.getContainer().getBoundingClientRect();
+  ratio=Math.min(0.98,Math.max(0.02,(p.clientX-rc.left)/rc.width));clip();ev.preventDefault();}
+sw.addEventListener('mousedown',function(e){drag=true;map.dragging.disable();e.stopPropagation();});
+sw.addEventListener('touchstart',function(e){drag=true;map.dragging.disable();e.stopPropagation();},{passive:true});
+window.addEventListener('mousemove',mv);window.addEventListener('touchmove',mv,{passive:false});
+function up(){if(drag){drag=false;map.dragging.enable();}}
+window.addEventListener('mouseup',up);window.addEventListener('touchend',up);
+['swipe','legend','north','scale'].forEach(function(id){L.DomEvent.disableClickPropagation(document.getElementById(id));});
+setMode('swipe');
+</script>
+</body>
+</html>

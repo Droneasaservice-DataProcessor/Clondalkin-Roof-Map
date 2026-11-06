@@ -21,7 +21,7 @@ header .sub{font-size:12px;opacity:.85}
 .item{display:flex;gap:10px;padding:10px 16px;border-top:1px solid #eee;cursor:pointer;align-items:flex-start}
 .item:hover{background:#eef2f8}
 .num{flex:0 0 26px;height:26px;border-radius:50%;background:#c00000;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
-.num.off{background:#8c8c8c}
+.num.off{background:#8c8c8c}.num.gr{background:#b8860b}
 .item b{font-size:13px;display:block}
 .item span{font-size:12px;color:#555}
 .status{display:inline-block;margin-top:4px;font-size:11px;padding:1px 7px;border-radius:10px;border:1px solid}
@@ -47,6 +47,14 @@ header .sub{font-size:12px;opacity:.85}
 #legend .info{margin-top:5px;color:#555}
 #legend .more{color:#1F3864;cursor:pointer;text-decoration:underline}
 #about{display:none;margin-top:6px;line-height:1.4;color:#333}
+#brand{left:50%;top:10px;transform:translateX(-50%);padding:5px 10px;z-index:700}
+#brand img{width:130px;display:block}
+.coord{font-size:12px;background:#f3f4f6;border:1px solid #e1e3e8;border-radius:6px;padding:6px 8px;margin:6px 0;line-height:1.5;color:#333}
+.coord a,.coord span.cp{color:#1F3864;cursor:pointer;text-decoration:underline;margin-right:8px}
+.coord small{display:block;color:#666;margin-top:2px}
+.cam{width:12px;height:12px;border-radius:50%;background:#1F3864;border:2px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.7)}
+.lyr{margin-top:6px;display:flex;align-items:center;gap:6px;color:#333}
+.tag.cm{color:#1F3864;border-color:#1F3864}
 #north{right:12px;top:12px;text-align:center;font-weight:700;color:#1F3864;padding:6px 9px;line-height:1.1}
 #scale{right:12px;bottom:14px;padding:6px 10px}
 #scale .sb{height:6px;border:2px solid #1d1d1b;border-top:none;margin-top:3px}
@@ -58,6 +66,7 @@ header .sub{font-size:12px;opacity:.85}
 #lightbox img{max-width:92vw;max-height:84vh;border-radius:4px}
 #lightbox div{color:#fff;font-size:13px;margin-top:8px}
 @media (max-width:760px){
+ #brand{display:none}
  header{height:auto;flex-wrap:wrap;padding:8px}header .sub{display:none}
  #side{top:auto;bottom:0;width:100%;height:42%;border-right:none;border-top:1px solid #ddd}
  #map{left:0;top:84px;bottom:42%}
@@ -73,7 +82,7 @@ header .sub{font-size:12px;opacity:.85}
 <aside id="side">
   <div id="list">
     <h2>Findings</h2>
-    <p class="intro">Select a finding to see its photos and what it means. Red numbers are marked on the map; grey numbers relate to the eaves or elevations at several locations.</p>
+    <p class="intro">Select a finding to see its photos and what it means. Red rings are findings; blue dots show where the drone was when each photo was taken; the yellow dashed line is the approximate route of the ground photos. Grey numbers relate to the eaves or elevations at several locations and have no pin yet.</p>
     <div id="items"></div>
   </div>
   <div id="detail"></div>
@@ -82,7 +91,9 @@ header .sub{font-size:12px;opacity:.85}
   <div id="swipe"><span>&#8596;</span></div>
   <div id="legend" class="panel"><b>Surface temperature</b><div class="bar"></div><div class="ends"><span>5 °C cold</span><span>25 °C warm</span></div>
     <div class="info">Click the roof to read the temperature. <span class="more" id="moreBtn">About the readings</span></div>
+    <label class="lyr"><input type="checkbox" id="camToggle" checked> Show photo locations (blue dots)</label>
     <div id="about">Apparent surface temperatures at emissivity 0.95, captured around midday. Suitable for tiles, membrane and concrete; not reliable on metal or glass (flashings, fans, rooflights). Accuracy approx. ±2 °C, so best used to compare nearby spots. Sun-facing slopes read warmer because of the sun, not defects. White areas: no thermal coverage.</div></div>
+  <div id="brand" class="panel"><img src="logo.png" alt="Drone as a Service"></div>
   <div id="north" class="panel">N<br>&#8593;</div>
   <div id="scale" class="panel"><span id="sl">5 m</span><div class="sb" id="sbar"></div></div>
 </div>
@@ -91,7 +102,7 @@ header .sub{font-size:12px;opacity:.85}
 <script src="temps.js"></script>
 <script>
 var W=6117,H=4832,PX=0.0165;
-var ST={ok:['s-ok','Repair evidence seen'],warn:['s-warn','Repair seen – check'],bad:['s-bad','No repair evidence seen'],na:['s-na','Not verified'],info:['s-na','Condition item']};
+var ST={ok:['s-ok','Repair evidence seen'],warn:['s-warn','Repair seen – check'],bad:['s-bad','No repair evidence seen'],na:['s-na','Not verified'],info:['s-na','Condition item'],apx:['s-warn','Approximate location']};
 var T='Thermal',V='Visual';
 var FIND=[
  {n:1,t:'Valley gutters (central crossing)',s:'Relined south-east valley; disturbed tiles at its top',st:'warn',xy:[3750,2670],
@@ -123,7 +134,7 @@ var FIND=[
   b:['The light-grey membrane is consistent with the new GRP overlay and mostly reads warm (dry).','A line of cold patches near the upstand matches rust-brown stains – standing water (ponding).','An older, darker membrane at the north end carries moss; unclear whether it was included in the overlay.','A loose cable lies across the membrane.'],
   m:'Water is not draining fully from parts of the new membrane. The extent of the overlay works should be confirmed with the vendor.'},
  {n:8,t:'Penetrations, vents and lightning protection',s:'Staining and cold zone around extract fans',st:'info',xy:[3285,2835],
-  imgs:[['f8_t0049.jpg',T+' – extract fan units'],['f8_v0049.jpg',V+' – extract fan units']],
+  imgs:[['f8_t0049.jpg',T+' – extract fan units'],['f8_v0049.jpg',V+' – extract fan units'],['f8_v0128.jpg',V+' – extract fans and replaced tiles, angled view','wide']],
   b:['Heavy dark staining around the fan bases; a matching cold zone on thermal (damp, condensate or partly shade).','Tile vents appear in place; lightning protection tape appears continuous where visible.'],
   m:'The staining suggests long-term water or condensate run-off. The fan flashings should be checked close up.'},
  {n:9,t:'Stair-core windows (overview)',s:'Not identified in the survey imagery',st:'na',xy:null,loc:'Not located',
@@ -133,8 +144,38 @@ var FIND=[
  {n:'i',t:'Incidental: render cracking',s:'Outside roof scope – for information',st:'info',xy:null,loc:'Building corner below the eaves',
   imgs:[['inc_d0016.jpg',V+' – render below the eaves','wide']],
   b:['Stepped and horizontal cracks with dark staining in the render at a building corner.'],
-  m:'Outside the roof scope of this survey and not assessed.'}
+  m:'Outside the roof scope of this survey and not assessed.'},
+ {n:'G',t:'Ground photos (phone)',s:'Taken from the ground along the east and south eaves',st:'apx',xy:[4554,2826],
+  imgs:[['g_ph1.jpg',V+' – roof edge, gutter and fascia'],['g_ph4.jpg',V+' – eaves corner and downpipe'],['f6_ph7.jpg',V+' – fascia and downpipe outlet','wide']],
+  b:['Taken from the ground along the east side of the single-storey wing, its south side, and the east side of the main block\'s south arm (yellow dashed route on the map).','They show moss at the roof edge, flaking paint on the fascias and the condition of the gutters and downpipes, consistent with Findings 5 and 6.'],
+  m:'These photos support Findings 5 and 6. The route is approximate: individual photo positions were not recorded.'}
 ];
+var LL={G:[53.318271,-6.371812,708482.8,731014.6,'Approximate: the photos were taken from the ground along the dashed route, marked by the surveyor. Individual photo positions were not recorded.'],1:[53.318297,-6.372010,708469.52,731017.16],2:[53.318438,-6.371953,708472.99,731032.90],4:[53.318253,-6.372194,708457.39,731011.96],7:[53.318396,-6.371858,708479.42,731028.45],8:[53.318274,-6.372126,708461.85,731014.44]};
+var CAMS=[
+ {id:'0052',time:'12:39:39',n:1,ll:[53.318301,-6.372025,708468.52,731017.60],xy:[3689,2643],imgs:[['f1_t0052.jpg',T+' – south-east valley'],['f1_v0052.jpg',V+' – south-east valley']]},
+ {id:'0136 (12:41)',time:'12:41:08',n:1,ll:[53.318263,-6.372142,708460.82,731013.20],xy:[3223,2910],imgs:[['f1_t0136b.jpg',T+' – central crossing'],['f1_v0136b.jpg',V+' – central crossing']]},
+ {id:'0048',time:'12:13:28',n:2,ll:[53.318492,-6.371864,708478.76,731039.10],xy:[4310,1341],imgs:[['f2_v0048.jpg',V+' – pitched-to-flat junction','wide']]},
+ {id:'0136 (12:14)',time:'12:14:58',n:4,ll:[53.318334,-6.372604,708429.86,731020.39],xy:[1346,2474],imgs:[['f4_t0136a.jpg',T+' – west wing slope'],['f4_v0136a.jpg',V+' – west wing slope']]},
+ {id:'0118',time:'12:14:40',n:7,ll:[53.318401,-6.371903,708476.39,731028.91],xy:[4167,1958],imgs:[['f7_t0118.jpg',T+' – flat roof, north section'],['f7_v0118.jpg',V+' – flat roof']]},
+ {id:'0164',time:'12:15:27',n:7,ll:[53.318379,-6.371832,708481.18,731026.57],xy:[4457,2100],imgs:[['f7_t0164.jpg',T+' – flat roof'],['f7_v0164.jpg',V+' – flat roof']]},
+ {id:'0049',time:'12:39:36',n:8,ll:[53.318291,-6.372143,708460.68,731016.31],xy:[3214,2722],imgs:[['f8_t0049.jpg',T+' – extract fan units'],['f8_v0049.jpg',V+' – extract fan units']]},
+ {id:'0003',time:'12:53:22',n:3,zoom:true,ll:[53.318575,-6.372612,708428.72,731047.16],xy:[1277,852],imgs:[['f3_d0003.jpg',V+' – hip end','wide']]},
+ {id:'0010',time:'13:09:58',n:3,zoom:true,ll:[53.318306,-6.372869,708412.29,731016.88],xy:[281,2687],imgs:[['f6_d0010.jpg',V+' – hip end','wide']]},
+ {id:'0016',time:'13:13:39',n:'i',zoom:true,ll:[53.318059,-6.372190,708458.17,730990.44],xy:[3062,4290],imgs:[['inc_d0016.jpg',V+' – render below the eaves','wide']]},
+ {id:'0020',time:'13:16:12',n:6,zoom:true,ll:[53.318078,-6.371811,708483.34,730993.11],xy:[4587,4128],imgs:[['f3_d0020.jpg',V+' – gutter corner and hip end','wide']]},
+ {id:'0022',time:'13:16:32',n:5,zoom:true,ll:[53.318078,-6.371812,708483.27,730993.10],xy:[4583,4128],imgs:[['f5_d0022.jpg',V+' – fascia and soffit','wide']]},
+ {id:'0023',time:'13:16:56',n:5,zoom:true,ll:[53.318085,-6.371817,708482.95,730993.91],xy:[4564,4079],imgs:[['f5_d0023.jpg',V+' – fascia beside a downpipe','wide']]},
+ {id:'0006',time:'12:12:45',n:2,ll:[53.318579,-6.372174,708457.92,731048.27],xy:[3047,785],imgs:[['f2_v0006.jpg',V+' – north projection','wide']]},
+ {id:'0309',time:'12:49:45',n:9,ll:[53.318297,-6.371674,708491.89,731017.69],xy:[5106,2638],imgs:[['f9_v0309.jpg',V+' – arched gable window, courtyard elevation','wide']]},
+ {id:'0092 (12:40)',time:'12:40:20',n:4,ll:[53.318208,-6.372087,708464.64,731007.19],xy:[3454,3274],imgs:[['f4_v0092.jpg',V+' – replaced tiles near the fans (top right)','wide']]},
+ {id:'0128 (12:41)',time:'12:41:00',n:8,ll:[53.318087,-6.372155,708460.40,730993.63],xy:[3197,4096],imgs:[['f8_v0128.jpg',V+' – extract fans and replaced tiles, angled view','wide']]}
+];
+function coordBox(ll,label,note){
+  var la=ll[0].toFixed(6),lo=ll[1].toFixed(6);
+  return '<div class="coord"><b>'+label+'</b><br>WGS84: '+la+', '+lo+'<br>ITM: E '+ll[2].toFixed(1)+' · N '+ll[3].toFixed(1)
+   +'<br><a href="https://www.google.com/maps?q='+la+','+lo+'&t=k" target="_blank" rel="noopener">Open in Google Maps</a><span class="cp" data-c="'+la+', '+lo+'">Copy coordinates</span>'+(note?'<small>'+note+'</small>':'')+'</div>';}
+function wireCopy(el){el.querySelectorAll('.cp').forEach(function(c){c.onclick=function(){
+  if(navigator.clipboard){navigator.clipboard.writeText(c.dataset.c);c.textContent='Copied';setTimeout(function(){c.textContent='Copy coordinates'},1500);}}});}
 var map=L.map('map',{crs:L.CRS.Simple,minZoom:-4,maxZoom:2,zoomSnap:0.25,attributionControl:false,zoomControl:true});
 var bounds=[[0,0],[H,W]];
 map.createPane('thermalPane');map.getPane('thermalPane').style.zIndex=410;
@@ -144,20 +185,42 @@ map.fitBounds(bounds);map.setMaxBounds([[-H*0.3,-W*0.3],[H*1.3,W*1.3]]);
 function ll(x,y){return[H-y,x];}
 var markers={};
 FIND.forEach(function(f){if(!f.xy)return;
-  var m=L.circleMarker(ll(f.xy[0],f.xy[1]),{radius:9,color:'#c00000',weight:3,fillColor:'#fff',fillOpacity:.3}).addTo(map)
-   .bindTooltip('<span class="tag">Finding '+f.n+'</span>',{permanent:true,direction:'top',offset:[0,-8],className:'lbl',opacity:1});
+  var m=L.circleMarker(ll(f.xy[0],f.xy[1]),{radius:9,color:(f.n==='G'?'#d4a000':'#c00000'),weight:3,fillColor:'#fff',fillOpacity:.3}).addTo(map)
+   .bindTooltip('<span class="tag">'+(f.n==='G'?'Ground photos':'Finding '+f.n)+'</span>',{permanent:true,direction:'top',offset:[0,-8],className:'lbl',opacity:1});
   m.on('click',function(e){L.DomEvent.stopPropagation(e);show(f.n);});markers[f.n]=m;});
+var routePts=[[5040, 1260], [5106, 1515], [5211, 2190], [5283, 2715], [4122, 2925], [4002, 2925], [4059, 3300], [4152, 3891]].map(function(g){return ll(g[0],g[1]);});
+L.polyline(routePts,{color:'#f5c400',weight:4,opacity:.95,dashArray:'9 6'}).addTo(map)
+ .bindTooltip('Ground photos – approximate route',{sticky:true})
+ .on('click',function(e){L.DomEvent.stopPropagation(e);show('G');});
+var camLayer=L.layerGroup().addTo(map);
+CAMS.forEach(function(c){
+  var m=L.marker(ll(c.xy[0],c.xy[1]),{icon:L.divIcon({className:'',html:'<div class="cam"></div>',iconSize:[12,12]})})
+   .bindTooltip('Photo '+c.id+' · '+c.time,{direction:'top',offset:[0,-6]}).addTo(camLayer);
+  m.on('click',function(e){L.DomEvent.stopPropagation(e);showCam(c);});});
+document.getElementById('camToggle').onchange=function(){if(this.checked)camLayer.addTo(map);else map.removeLayer(camLayer);};
+function showCam(c){var el=document.getElementById('detail');
+  var pics=c.imgs.map(function(i){return '<figure class="'+(i[2]||'')+'"><img src="img/'+i[0]+'" alt="'+i[1]+'" data-cap="'+i[1]+'"><figcaption>'+i[1]+'</figcaption></figure>'}).join('');
+  el.innerHTML='<span class="back">&larr; All findings</span><h3>Photo '+c.id+'</h3><div class="loc">Taken 29 Oct 2026, '+c.time+' · '+(c.n==='i'?'incidental observation':'part of Finding '+c.n)+'</div>'
+   +coordBox(c.ll,'Drone position when the photo was taken',c.zoom?'GPS position of the aircraft. The camera was zoomed in, so the photographed spot can be 10–30 m from this point, in the direction the camera was facing.':'GPS position of the aircraft. For a straight-down photo the spot photographed is within a few metres of this point; for an angled view it can be up to about 30 m away.')
+   +'<div class="pics">'+pics+'</div><div class="item" style="padding:8px 0;border:0"><span class="status s-na" id="gof" style="cursor:pointer">Go to '+(c.n==='i'?'incidental observation':'Finding '+c.n)+' &rarr;</span></div>';
+  document.getElementById('list').style.display='none';el.style.display='block';document.getElementById('side').scrollTop=0;
+  el.querySelector('.back').onclick=function(){el.style.display='none';document.getElementById('list').style.display='block';};
+  document.getElementById('gof').onclick=function(){show(c.n);};wireCopy(el);
+  el.querySelectorAll('img').forEach(function(im){im.onclick=function(){openLB(im.src,im.dataset.cap)}});
+  map.flyTo(ll(c.xy[0],c.xy[1]),0,{duration:.6});}
 var items=document.getElementById('items');
 FIND.forEach(function(f){var d=document.createElement('div');d.className='item';
-  d.innerHTML='<div class="num'+(f.xy?'':' off')+'">'+f.n+'</div><div><b>'+f.t+'</b><span>'+f.s+'</span><br><span class="status '+ST[f.st][0]+'">'+ST[f.st][1]+'</span></div>';
+  d.innerHTML='<div class="num'+(f.xy?'':' off')+(f.n==='G'?' gr':'')+'">'+f.n+'</div><div><b>'+f.t+'</b><span>'+f.s+'</span><br><span class="status '+ST[f.st][0]+'">'+ST[f.st][1]+'</span></div>';
   d.onclick=function(){show(f.n);};items.appendChild(d);});
 function show(n){var f=FIND.filter(function(x){return x.n==n})[0],el=document.getElementById('detail');
   var pics=f.imgs.map(function(i){return '<figure class="'+(i[2]||'')+'"><img src="img/'+i[0]+'" alt="'+i[1]+'" data-cap="'+i[1]+'"><figcaption>'+i[1]+'</figcaption></figure>'}).join('');
-  el.innerHTML='<span class="back">&larr; All findings</span><h3>'+(f.n==='i'?'':'Finding '+f.n+' – ')+f.t+'</h3>'
-   +'<div class="loc">'+(f.xy?'Marked on the map':'Location: '+f.loc+' (not marked on the map)')+' · <span class="status '+ST[f.st][0]+'">'+ST[f.st][1]+'</span></div>'
+  el.innerHTML='<span class="back">&larr; All findings</span><h3>'+(f.n==='i'||f.n==='G'?'':'Finding '+f.n+' – ')+f.t+'</h3>'
+   +'<div class="loc"><span class="status '+ST[f.st][0]+'">'+ST[f.st][1]+'</span></div>'
+   +(LL[f.n]?coordBox(LL[f.n],f.n==='G'?'Approximate location':'Location of this finding',LL[f.n][4]||'Position read from the georeferenced orthomosaic.'):'<div class="coord"><b>Location:</b> '+f.loc+'<small>No coordinates recorded for these photos yet. Coordinates can be added from the original photo GPS.</small></div>')
    +'<div class="pics">'+pics+'</div><ul>'+f.b.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><div class="mean"><b>What this means:</b> '+f.m+'</div>';
   document.getElementById('list').style.display='none';el.style.display='block';document.getElementById('side').scrollTop=0;
   el.querySelector('.back').onclick=function(){el.style.display='none';document.getElementById('list').style.display='block';};
+  wireCopy(el);
   el.querySelectorAll('img').forEach(function(im){im.onclick=function(){openLB(im.src,im.dataset.cap)}});
   if(f.xy)map.flyTo(ll(f.xy[0],f.xy[1]),0,{duration:.6});}
 var lb=document.getElementById('lightbox');
@@ -195,7 +258,7 @@ sw.addEventListener('touchstart',function(e){drag=true;map.dragging.disable();e.
 window.addEventListener('mousemove',mv);window.addEventListener('touchmove',mv,{passive:false});
 function up(){if(drag){drag=false;map.dragging.enable();}}
 window.addEventListener('mouseup',up);window.addEventListener('touchend',up);
-['swipe','legend','north','scale'].forEach(function(id){L.DomEvent.disableClickPropagation(document.getElementById(id));});
+['swipe','legend','north','scale','brand'].forEach(function(id){L.DomEvent.disableClickPropagation(document.getElementById(id));});
 setMode('swipe');
 </script>
 </body>
